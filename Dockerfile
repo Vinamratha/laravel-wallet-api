@@ -21,11 +21,10 @@ COPY . .
 # Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# CREATE SQLITE FILE (IMPORTANT)
-RUN mkdir -p /tmp && touch /tmp/database.sqlite
-
 # Expose port
 EXPOSE 10000
 
-# Start server
-CMD ["php", "-S", "0.0.0.0:10000", "-t", "public"]
+# Create sqlite file + permissions
+RUN mkdir -p /tmp && touch /tmp/database.sqlite && chmod 777 /tmp/database.sqlite
+
+CMD ["sh", "-c", "php artisan migrate --force && php -S 0.0.0.0:10000 -t public"]
