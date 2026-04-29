@@ -21,6 +21,9 @@ COPY . .
 # Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader
 
+# CREATE SQLITE FILE (IMPORTANT)
+RUN mkdir -p /tmp && touch /tmp/database.sqlite
+
 # Expose port
 EXPOSE 10000
 
