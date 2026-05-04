@@ -216,7 +216,7 @@ function getTransactions() {
 
             let typeClass = isSender ? "sent" : "received";
             let label = isSender ? "Sent" : "Received";
-            let otherUser = isSender ? (tx.receiver?.email || "Unknown") : (tx.sender?.email || "Unknown");
+            let otherUser = isSender ? (tx.receiver && tx.receiver.email || "Unknown") : (tx.sender && tx.sender.email || "Unknown");
 
             let time = new Date(tx.created_at).toLocaleString();
 
