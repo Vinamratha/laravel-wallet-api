@@ -137,7 +137,7 @@ function register() {
     .then(data => {
         console.log(data);
         showMessage("Registered successfully");
-    });
+    })
     .catch(err => console.log(err));
 }
 
