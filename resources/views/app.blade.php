@@ -49,6 +49,31 @@
         }
         .success { background: #d4edda; }
         .error { background: #f8d7da; }
+        .transaction {
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .sent {
+            background: #ffe5e5;
+            border-left: 4px solid red;
+        }
+
+        .received {
+            background: #e5ffe5;
+            border-left: 4px solid green;
+        }
+
+        .tx-amount {
+            font-weight: bold;
+        }
+
+        .tx-time {
+            font-size: 12px;
+            color: gray;
+        }
     </style>
 </head>
 
@@ -83,7 +108,7 @@
 
 <h2>Transactions</h2>
 <button onclick="getTransactions()">Load</button>
-<ul id="transactions"></ul>
+<div id="transactions"></div>
 
 <div id="msg" class="message"></div>
 </div>
@@ -169,17 +194,37 @@ function transfer() {
 
 function getTransactions() {
     fetch('/api/transactions', {
-        headers: { 'Authorization': 'Bearer ' + token }
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+        }
     })
     .then(res => res.json())
     .then(data => {
-        let list = document.getElementById('transactions');
-        list.innerHTML = "";
+        let container = document.getElementById('transactions');
+        container.innerHTML = "";
+
+        let userId = localStorage.getItem('user_id');
 
         data.forEach(tx => {
-            let item = document.createElement('li');
-            item.innerText = `₹${tx.amount} | From ${tx.sender_id} → ${tx.receiver_id}`;
-            list.appendChild(item);
+            let div = document.createElement('div');
+
+            let isSender = tx.sender_id == userId;
+
+            let typeClass = isSender ? "sent" : "received";
+            let label = isSender ? "Sent" : "Received";
+            let otherUser = isSender ? (tx.receiver?.email || "Unknown") : (tx.sender?.email || "Unknown");
+
+            let time = new Date(tx.created_at).toLocaleString();
+
+            div.className = "transaction " + typeClass;
+
+            div.innerHTML = `
+                <div class="tx-amount">${label} ₹${tx.amount}</div>
+                <div>${isSender ? "To" : "From"} User ID: ${othe rUser}</div>
+                <div class="tx-time">${time}</div>
+            `;
+
+            container.appendChild(div);
         });
     });
 }

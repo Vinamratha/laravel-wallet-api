@@ -87,9 +87,10 @@ class TransactionController extends Controller
             ], 401);
         }
 
-        $transactions = Transaction::where('sender_id', $user->id)
+        $transactions = Transaction::with(['sender:id,email', 'receiver:id,email'])
+            ->where('sender_id', $user->id)
             ->orWhere('receiver_id', $user->id)
-            ->latest()
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json($transactions);
