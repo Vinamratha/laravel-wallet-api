@@ -1,41 +1,101 @@
 <!DOCTYPE html>
+
 <html>
 <head>
     <title>Wallet App</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            margin-top: 50px;
+        }
+        .container {
+            width: 400px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-top: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success { background: #d4edda; }
+        .error { background: #f8d7da; }
+    </style>
 </head>
+
 <body>
+<div class="container">
+
+<h1>Wallet App</h1>
+
+<div id="userInfo"></div>
 
 <h2>Register</h2>
-<input id="name" placeholder="Name"><br>
-<input id="email" placeholder="Email"><br>
-<input id="password" placeholder="Password" type="password"><br>
+<input id="name" placeholder="Name">
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
 <button onclick="register()">Register</button>
 
 <h2>Login</h2>
-<input id="login_email" placeholder="Email"><br>
-<input id="login_password" placeholder="Password" type="password"><br>
+<input id="login_email" placeholder="Email">
+<input id="login_password" type="password" placeholder="Password">
 <button onclick="login()">Login</button>
+
+<button onclick="logout()">Logout</button>
 
 <h2>Wallet</h2>
 <button onclick="getWallet()">Get Balance</button>
 <p id="balance"></p>
 
 <h2>Transfer</h2>
-<input id="receiver" placeholder="Receiver Email"><br>
-<input id="amount" placeholder="Amount"><br>
+<input id="receiver" placeholder="Receiver Email">
+<input id="amount" placeholder="Amount">
 <button onclick="transfer()">Send</button>
 
-<h2>Transaction History</h2>
-<button onclick="getTransactions()">Load Transactions</button>
+<h2>Transactions</h2>
+<button onclick="getTransactions()">Load</button>
 <ul id="transactions"></ul>
 
-<button onclick="logout()">Logout</button>
+<div id="msg" class="message"></div>
+</div>
 
 <script>
 let token = localStorage.getItem('token') || "";
 
-if (localStorage.getItem('token')) {
-    document.body.insertAdjacentHTML('afterbegin', '<p>Logged in</p>');
+function showMessage(text, type="success") {
+    let msg = document.getElementById('msg');
+    msg.innerText = text;
+    msg.className = "message " + type;
+    msg.style.display = "block";
 }
 
 function register() {
@@ -43,13 +103,13 @@ function register() {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-            name: document.getElementById('name').value,
-            email: document.getElementById('email').value,
-            password: document.getElementById('password').value
+            name: name.value,
+            email: email.value,
+            password: password.value
         })
     })
     .then(res => res.json())
-    .then(data => alert(JSON.stringify(data)));
+    .then(data => showMessage("Registered successfully"));
 }
 
 function login() {
@@ -57,8 +117,8 @@ function login() {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-            email: document.getElementById('login_email').value,
-            password: document.getElementById('login_password').value
+            email: login_email.value,
+            password: login_password.value
         })
     })
     .then(res => res.json())
@@ -66,23 +126,28 @@ function login() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user_id', data.user.id);
         token = data.token;
-        alert("Logged in");
+        showMessage("Logged in");
+        loadUser();
     });
 }
 
-function getUserIdFromToken() {
-    return localStorage.getItem('user_id');
+function logout() {
+    localStorage.clear();
+    showMessage("Logged out");
+}
+
+function loadUser() {
+    document.getElementById('userInfo').innerText =
+        "Logged in User ID: " + localStorage.getItem('user_id');
 }
 
 function getWallet() {
     fetch('/api/wallet', {
-        headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
-        }
+        headers: { 'Authorization': 'Bearer ' + token }
     })
     .then(res => res.json())
     .then(data => {
-        document.getElementById('balance').innerText = "Balance: " + data.balance;
+        balance.innerText = "Balance: ₹" + data.balance;
     });
 }
 
@@ -91,22 +156,20 @@ function transfer() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
+            'Authorization': 'Bearer ' + token
         },
         body: JSON.stringify({
-            email: document.getElementById('receiver').value,
-            amount: document.getElementById('amount').value
+            email: receiver.value,
+            amount: amount.value
         })
     })
     .then(res => res.json())
-    .then(data => alert(JSON.stringify(data)));
+    .then(data => showMessage("Transfer successful"));
 }
 
 function getTransactions() {
     fetch('/api/transactions', {
-        headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
-        }
+        headers: { 'Authorization': 'Bearer ' + token }
     })
     .then(res => res.json())
     .then(data => {
@@ -115,26 +178,13 @@ function getTransactions() {
 
         data.forEach(tx => {
             let item = document.createElement('li');
-
-            let text = "";
-
-            if (tx.sender_id == getUserIdFromToken()) {
-                text = "Sent ₹" + tx.amount + " → User ID " + tx.receiver_id;
-            } else {
-                text = "Received ₹" + tx.amount + " ← User ID " + tx.sender_id;
-            }
-
-            item.innerText = text;
+            item.innerText = `₹${tx.amount} | From ${tx.sender_id} → ${tx.receiver_id}`;
             list.appendChild(item);
         });
     });
 }
 
-function logout() {
-    localStorage.removeItem('token');
-    alert("Logged out");
-}
-
+if (token) loadUser();
 </script>
 
 </body>
