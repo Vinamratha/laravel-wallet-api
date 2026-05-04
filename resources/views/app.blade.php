@@ -126,24 +126,28 @@ function showMessage(text, type="success") {
 function register() {
     fetch('/api/register', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json','Accept': 'application/json'},
         body: JSON.stringify({
-            name: name.value,
-            email: email.value,
-            password: password.value
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
         })
     })
     .then(res => res.json())
-    .then(data => showMessage("Registered successfully"));
+    .then(data => {
+        console.log(data);
+        showMessage("Registered successfully");
+    });
+    .catch(err => console.log(err));
 }
 
 function login() {
     fetch('/api/login', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json','Accept': 'application/json'},
         body: JSON.stringify({
-            email: login_email.value,
-            password: login_password.value
+            email: document.getElementById('login_email').value,
+            password: document.getElementById('login_password').value
         })
     })
     .then(res => res.json())
