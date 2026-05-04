@@ -27,4 +27,4 @@ EXPOSE 10000
 # Create sqlite file + permissions
 RUN mkdir -p /tmp && touch /tmp/database.sqlite && chmod 777 /tmp/database.sqlite
 
-CMD ["sh", "-c", "rm -f /tmp/database.sqlite && touch /tmp/database.sqlite && php artisan migrate --force && php -S 0.0.0.0:10000 -t public"]
+CMD ["sh", "-c", "php artisan config:clear && php artisan cache:clear && php artisan migrate --force && php -S 0.0.0.0:10000 -t public"]
