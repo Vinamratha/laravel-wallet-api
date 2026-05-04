@@ -220,7 +220,7 @@ function getTransactions() {
 
             div.innerHTML = `
                 <div class="tx-amount">${label} ₹${tx.amount}</div>
-                <div>${isSender ? "To" : "From"} User ID: ${othe rUser}</div>
+                <div>${isSender ? "To" : "From"} User ID: ${otherUser}</div>
                 <div class="tx-time">${time}</div>
             `;
 
