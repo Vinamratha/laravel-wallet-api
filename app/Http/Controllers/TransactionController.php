@@ -75,20 +75,26 @@ class TransactionController extends Controller
 
     public function history()
     {
-        $user = Auth::user();
+        
+        try{
+            $user = Auth::user();
 
-        if (!$user->id) {
+            if (!$user->id) {
+                return response()->json([
+                    'message' => 'Unauthenticated'
+                ], 401);
+            }
+
+            $transactions = Transaction::with(['sender:id,email', 'receiver:id,email'])
+                ->where('sender_id', $user->id)
+                ->orWhere('receiver_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json($transactions);
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Unauthenticated'
-            ], 401);
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $transactions = Transaction::with(['sender:id,email', 'receiver:id,email'])
-            ->where('sender_id', $user->id)
-            ->orWhere('receiver_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return response()->json($transactions);
-    }
 }
