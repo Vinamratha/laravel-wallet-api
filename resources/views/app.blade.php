@@ -352,6 +352,12 @@ function getTransactions() {
 
         let userId = localStorage.getItem('user_id');
 
+        if (!Array.isArray(data)) {
+            console.error("API ERROR:", data);
+            alert("Error: " + (data.error || data.message));
+            return;
+        }
+        
         data.forEach(tx => {
             let div = document.createElement('div');
 
