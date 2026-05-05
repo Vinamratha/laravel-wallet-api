@@ -331,7 +331,19 @@ function getTransactions() {
             'Authorization': 'Bearer ' + localStorage.getItem('token')
         }
     })
-    .then(res => res.json())
+    .then(res => {
+        console.log("STATUS:", res.status);
+
+        return res.text().then(text => {
+            console.log("RAW RESPONSE:", text); // 🔥 THIS WILL SHOW ERROR
+
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                throw new Error("Not JSON response");
+            }
+        });
+    })
     .then(data => {
         let container = document.getElementById('transactions');
         container.innerHTML = "";
