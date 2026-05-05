@@ -124,39 +124,107 @@ function showMessage(text, type="success") {
 }
 
 function register() {
+    let name = document.getElementById('name').value;
+    let email = document.getElementById('email').value;
+    let password = document.getElementById('password').value;
+
+    if (!name || !email || !password) {
+        showMessage("All fields are required", "error");
+        return;
+    }
+
     fetch('/api/register', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json','Accept': 'application/json'},
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
         body: JSON.stringify({
             name: document.getElementById('name').value,
             email: document.getElementById('email').value,
             password: document.getElementById('password').value
         })
     })
-    .then(res => res.json())
-    .then(data => {
-        console.log(data);
-        showMessage("Registered successfully");
+    .then(res => res.json().then(data => ({ status: res.status, body: data })))
+    .then(result => {
+        console.log(result);
+
+        if (result.status === 200 || result.status === 201) {
+            showMessage("Registered successfully", "success");
+        } else {
+            showMessage(result.body.message || "Registration failed", "error");
+        }
     })
-    .catch(err => console.log(err));
+    .catch(err => {
+        console.log(err);
+        showMessage("Something went wrong", "error");
+    });
 }
 
 function login() {
+
+    let email = document.getElementById('login_email').value;
+    let password = document.getElementById('login_password').value;
+
+    // Frontend validation
+    if (!email || !password) {
+        showMessage("Email and password are required", "error");
+        return;
+    }
+
     fetch('/api/login', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json','Accept': 'application/json'},
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
         body: JSON.stringify({
-            email: document.getElementById('login_email').value,
-            password: document.getElementById('login_password').value
+            email: email,
+            password: password
         })
     })
-    .then(res => res.json())
-    .then(data => {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user_id', data.user.id);
-        token = data.token;
-        showMessage("Logged in");
-        loadUser();
+    .then(res => res.json().then(data => ({ status: res.status, body: data })))
+    .then(result => {
+        console.log(result);
+
+        // Success case
+        if (result.status === 200) {
+
+            if (!result.body.token) {
+                showMessage("Invalid login response", "error");
+                return;
+            }
+
+            localStorage.setItem('token', result.body.token);
+            localStorage.setItem('user_id', result.body.user.id);
+
+            showMessage("Login successful", "success");
+
+            loadUser(); // update UI
+            getWallet();
+            getTransactions();
+            document.getElementById('login_email').value = "";
+            document.getElementById('login_password').value = "";
+        }
+
+        // Invalid credentials
+        else if (result.status === 401) {
+            showMessage("Invalid email or password", "error");
+        }
+
+        // Validation error
+        else if (result.status === 422) {
+            showMessage(result.body.message || "Validation failed", "error");
+        }
+
+        // Other errors
+        else {
+            showMessage("Login failed", "error");
+        }
+    })
+    .catch(err => {
+        console.log(err);
+        showMessage("Something went wrong", "error");
     });
 }
 
@@ -181,19 +249,80 @@ function getWallet() {
 }
 
 function transfer() {
+
+    let receiver = document.getElementById('receiver').value;
+    let amount = document.getElementById('amount').value;
+
+    // Frontend validation
+    if (!receiver || !amount) {
+        showMessage("All fields are required", "error");
+        return;
+    }
+
+    if (isNaN(amount) || amount <= 0) {
+        showMessage("Amount must be greater than 0", "error");
+        return;
+    }
+
+    let currentUserId = localStorage.getItem('user_id');
+
+    // (optional if you later pass user_id or email check)
+    // prevent self-transfer (if backend supports email match)
+    // you can improve later using user email instead of ID
+
     fetch('/api/transfer', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
         },
         body: JSON.stringify({
-            email: receiver.value,
-            amount: amount.value
+            email: receiver,
+            amount: amount
         })
     })
-    .then(res => res.json())
-    .then(data => showMessage("Transfer successful"));
+    .then(res => res.json().then(data => ({ status: res.status, body: data })))
+    .then(result => {
+        console.log(result);
+
+        // Success
+        if (result.status === 200) {
+            showMessage("Transfer successful", "success");
+
+            // Refresh UI
+            getWallet();
+            getTransactions();
+
+            // clear fields
+            document.getElementById('receiver').value = "";
+            document.getElementById('amount').value = "";
+        }
+
+        // Validation errors
+        else if (result.status === 422) {
+            showMessage(result.body.message || "Validation failed", "error");
+        }
+
+        // Insufficient balance (if backend sends message)
+        else if (result.status === 400) {
+            showMessage(result.body.message || "Insufficient balance", "error");
+        }
+
+        // Unauthorized
+        else if (result.status === 401) {
+            showMessage("Please login again", "error");
+        }
+
+        // Other errors
+        else {
+            showMessage("Transfer failed", "error");
+        }
+    })
+    .catch(err => {
+        console.log(err);
+        showMessage("Something went wrong", "error");
+    });
 }
 
 function getTransactions() {

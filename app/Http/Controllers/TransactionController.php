@@ -37,10 +37,6 @@ class TransactionController extends Controller
             return response()->json(['message' => 'Insufficient balance'], 400);
         }
 
-        if ($senderWallet->balance < $request->amount) {
-            return response()->json(['message' => 'Insufficient balance'], 400);
-        }
-
         DB::beginTransaction();
 
         try {
