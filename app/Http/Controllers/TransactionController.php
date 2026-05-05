@@ -92,7 +92,8 @@ class TransactionController extends Controller
                 ->get();
 
             return response()->json($transactions);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error($e);
             return response()->json([
                 'error' => $e->getMessage()
             ], 500);
