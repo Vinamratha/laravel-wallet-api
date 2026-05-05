@@ -27,4 +27,4 @@ EXPOSE 10000
 # Create sqlite file + permissions
 RUN mkdir -p /tmp && touch /tmp/database.sqlite && chmod 777 /tmp/database.sqlite
 
-CMD php artisan serve --host=0.0.0.0 --port=${PORT}
+CMD sh -c "php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
