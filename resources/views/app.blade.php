@@ -335,7 +335,7 @@ function getTransactions() {
         console.log("STATUS:", res.status);
 
         return res.text().then(text => {
-            console.log("RAW RESPONSE:", text); // 🔥 THIS WILL SHOW ERROR
+            console.log("RAW RESPONSE:", text); // THIS WILL SHOW ERROR
 
             try {
                 return JSON.parse(text);
