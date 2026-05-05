@@ -105,6 +105,8 @@
 <input id="receiver" placeholder="Receiver Email">
 <input id="amount" placeholder="Amount">
 <button onclick="transfer()">Send</button>
+<input id="addAmount" placeholder="Amount">
+<button onclick="addMoney()">Add Money</button>
 
 <h2>Transactions</h2>
 <button onclick="getTransactions()">Load</button>
@@ -357,7 +359,7 @@ function getTransactions() {
             alert("Error: " + (data.error || data.message));
             return;
         }
-        
+
         data.forEach(tx => {
             let div = document.createElement('div');
 
@@ -380,6 +382,21 @@ function getTransactions() {
             container.appendChild(div);
         });
     });
+}
+
+function addMoney() {
+    fetch('/api/add-money', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token'),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            amount: document.getElementById('addAmount').value
+        })
+    })
+    .then(res => res.json())
+    .then(data => alert("New Balance: " + data.balance));
 }
 
 if (token) loadUser();

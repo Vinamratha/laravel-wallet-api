@@ -27,6 +27,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'balance' => 1000 
         ]);
         Wallet::create([
             'user_id' => $user->id,
