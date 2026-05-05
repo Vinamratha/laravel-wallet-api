@@ -326,9 +326,11 @@ function transfer() {
 }
 
 function getTransactions() {
+    console.log("TOKEN:", localStorage.getItem('token'));
     fetch('/api/transactions', {
         headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
+            'Authorization': 'Bearer ' + localStorage.getItem('token'),
+            'Accept': 'application/json'
         }
     })
     .then(res => {
